@@ -10,6 +10,7 @@ _watchDog = None
 @route('/')
 @view('index')
 def index():
+    _watchDog.wake()
     return dict(
         screenshots_number = len(_watchDog.screenshots_taken),
         screenshots_number_max = _watchDog.MAX_SCREENSHOTS,
@@ -24,6 +25,7 @@ def server_static(filename):
 
 @route('/screenshot/<filename>')
 def screenshot(filename):
+    _watchDog.wake()
     return static_file(filename,_watchDog.SCRENSHOTS_DIR, mimetype='image/png')
 
 @route('/screenshot/latest.png')
@@ -45,6 +47,7 @@ def screenshot_previous(filename, index):
 from tail import tail
 @route('/tail')
 def req_tail():
+    _watchDog.wake()
     f = open(_watchDog.LOG_FILE)
     if (f):
         result = tail(f)

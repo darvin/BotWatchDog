@@ -8,7 +8,7 @@ set WATCH_DOG_LOG_FILE=%HEARTHRANGER_LOG_DIR%%NEWEST_LOG%
 
 set WATCH_DOG_HOME=%~dp0
 set SIKULIX_HOME=%WATCH_DOG_HOME%\_portable\Sikuli\
-set PARMS=-Xms64M -Xmx512M -Dfile.encoding=UTF-8 -Dsikuli.FromCommandLine -Djava.library.path="%SIKULIX_HOME%libs" -Dsikuli.Debug=3
+set PARMS=-Xms64M -Xmx512M -Dfile.encoding=UTF-8 -Dsikuli.FromCommandLine -Djava.library.path="%SIKULIX_HOME%libs" 
 set JAVA_HOME=%WATCH_DOG_HOME%\_portable\Java
 set SIKULI_COMMAND=-r BotWatchDog.sikuli 
 PATH=%PATH%;%SIKULIX_HOME%libs;%JAVA_HOME%\bin
