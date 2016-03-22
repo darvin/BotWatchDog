@@ -13,7 +13,7 @@ def index():
     return dict(
         screenshots_number = len(_watchDog.screenshots_taken),
         screenshots_number_max = _watchDog.MAX_SCREENSHOTS,
-        screenshot_url = "/screenshot/%s"%_watchDog.screenshots_taken[-1],
+        screenshot = _watchDog.screenshots_taken[-1],
         crashes_amount = _watchDog.crashes_amount
         )
 
@@ -29,6 +29,18 @@ def screenshot(filename):
 @route('/screenshot/latest.png')
 def screenshot_latest():
     return screenshot(_watchDog.screenshots_taken[-1])
+
+@route('/screenshot/<filename>/previous/<index>')
+def screenshot_previous(filename, index):
+    try:
+        i = _watchDog.screenshots_taken.index(filename)
+    except ValueError:
+        i = 0
+    i -= int(index)
+    if i < 0:
+        i = len(_watchDog.screenshots_taken)-1
+    return screenshot(_watchDog.screenshots_taken[i])
+
 
 from tail import tail
 @route('/tail')

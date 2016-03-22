@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Foundation | Welcome</title>
+    <title>BotWatchDog</title>
     <link rel="stylesheet" href="/static/css/foundation.css" />
     <link rel="stylesheet" href="/static/css/app.css" />
   </head>
@@ -27,7 +27,7 @@
       </div>
       <div class="large-12 columns">
         <div class="callout large">
-          <img src="{{screenshot_url}}">
+          <a id="screenshot-link"><img id="screenshot-img" src="/screenshot/{{screenshot}}"></a>
           
         </div>
       </div>
@@ -49,14 +49,25 @@
     <script src="/static/js/app.js"></script>
 
     <script type="text/javascript">
-      
+  
+
 $(document).ready(function() {
+  var i = 0;
+
   var refreshlog = function()
         {
              $('#log-pre').load('/tail');
         }
   var refreshId = setInterval(refreshlog, 5000);
   refreshlog();
+
+
+  $('#screenshot-link').click(function() {
+    $("#screenshot-img").fadeTo(90,0.30, function() {
+      i++;
+      $("#screenshot-img").attr("src","/screenshot/"+"{{screenshot}}"+"/previous/"+i);
+    }).fadeTo(90,1);
+  });
 });
 
     </script>
