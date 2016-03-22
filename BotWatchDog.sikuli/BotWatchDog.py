@@ -4,16 +4,18 @@ JythonHelper.get().addSysPath(getBundlePath())
 from utils import perpetualTimer
 
 def ROS_BOT_INIT():
-    pass
+    print "-- Initializing tweaks for Diablo III"
 
 def ROS_BOT_TICK():
-    pass
+    if exists(Pattern("1458636827264.png").similar(0.49)):
+       click("1458636858219.png")
+       
 
 
-
+print "APP NAME ",APPLICATION_NAME
 if APPLICATION_NAME=="Diablo III":
     ROS_BOT_INIT()
-    perpetualTimer(10, ROS_BOT_TICK)
+    perpetualTimer(10, ROS_BOT_TICK).start()
 
 
 
