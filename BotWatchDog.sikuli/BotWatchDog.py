@@ -1,81 +1,50 @@
-APP_NAME = "Photos"
-SCRENSHOTS_DIR = "/tmp/"
-LOG_FILE = "/var/log/system.log"
-MAX_SCREENSHOTS = 20
+import org.sikuli.util.JythonHelper
+JythonHelper.get().addSysPath(getBundlePath())
+
 import shutil
 import os
 import time 
 from threading import Timer
 
-screenshots_taken = []
-crashes_amount = 0
-def screenshot_name():
-    return "%s.png" % time.strftime("%Y%m%d-%H%M%S")
+
+class BotWatchDog:
+    APP_NAME = "Photos"
+    SCRENSHOTS_DIR = "/tmp/"
+    LOG_FILE = "/var/log/system.log"
+    MAX_SCREENSHOTS = 20
+
+    screenshots_taken = []
+    crashes_amount = 0
+
+    def screenshot_name(self):
+        return "%s.png" % time.strftime("%Y%m%d-%H%M%S")
 
 
-def clean_old_screenshots():
-    global screenshots_taken
-    indx = len(screenshots_taken)-MAX_SCREENSHOTS
-    for screnshot in screenshots_taken[:indx]:
-        print "-scr: %s" % screnshot
-    screenshots_taken = screenshots_taken[indx:]
+    def clean_old_screenshots(self):
+        indx = len(self.screenshots_taken)-self.MAX_SCREENSHOTS
+        for screnshot in self.screenshots_taken[:indx]:
+            print "-scr: %s" % screnshot
+        self.screenshots_taken = self.screenshots_taken[indx:]
 
-def take_screenshot():
-    global screenshots_taken
-    region = App(APP_NAME).window()
-    img = capture(region)
-    scr = screenshot_name()
-    shutil.move(img, os.path.join(SCRENSHOTS_DIR, scr))
-    print "+scr: %s" % scr
-    screenshots_taken.append(scr)
-    if len(screenshots_taken)>MAX_SCREENSHOTS:
-        clean_old_screenshots()
-    Timer(1, take_screenshot, ()).start()
+    def take_screenshot(self):
+        region = App(self.APP_NAME).window()
+        img = capture(region)
+        scr = self.screenshot_name()
+        shutil.move(img, os.path.join(self.SCRENSHOTS_DIR, scr))
+        print "+scr: %s" % scr
+        self.screenshots_taken.append(scr)
+        if len(self.screenshots_taken)>self.MAX_SCREENSHOTS:
+            self.clean_old_screenshots()
+        Timer(1, lambda: self.take_screenshot(), ()).start()
 
-Timer(1, take_screenshot, ()).start()
-
-
-import org.sikuli.util.JythonHelper
-JythonHelper.get().addSysPath(getBundlePath())
+dog = BotWatchDog()
+dog.take_screenshot()
 
 
-print getBundlePath()
+
+from server import run_server
 
 
-from bottle import route, run, template, view
-from bottle import static_file, TEMPLATE_PATH
-TEMPLATE_PATH.append(os.path.join(getBundlePath(), "views"))
-
-@route('/')
-@view('index')
-def index():
-    return dict(
-        screenshots_number = len(screenshots_taken),
-        screenshots_number_max = MAX_SCREENSHOTS,
-        screenshot_url = "/screenshot/%s"%screenshots_taken[-1],
-        crashes_amount = crashes_amount
-        )
-
-@route('/static/<filename:re:.*>')
-def server_static(filename):
-    return static_file(filename, root=os.path.join(getBundlePath(), "static"))
+run_server(dog)
 
 
-@route('/screenshot/<filename>')
-def screenshot(filename):
-    return static_file(filename,SCRENSHOTS_DIR, mimetype='image/png')
-
-@route('/screenshot/latest.png')
-def screenshot_latest():
-    return screenshot(screenshots_taken[-1])
-
-from tail import tail
-@route('/tail')
-def req_tail():
-    f = open(LOG_FILE)
-    result = tail(f)
-    print result
-    f.close()
-    return result
-
-run(host='localhost', port=3070)
