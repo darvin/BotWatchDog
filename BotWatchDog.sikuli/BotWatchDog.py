@@ -8,6 +8,7 @@ import time
 from threading import Timer
 
 screenshots_taken = []
+crashes_amount = 0
 def screenshot_name():
     return "%s.png" % time.strftime("%Y%m%d-%H%M%S")
 
@@ -51,7 +52,8 @@ def index():
     return dict(
         screenshots_number = len(screenshots_taken),
         screenshots_number_max = MAX_SCREENSHOTS,
-        screenshot_url = "/screenshot/%s"%screenshots_taken[-1]
+        screenshot_url = "/screenshot/%s"%screenshots_taken[-1],
+        crashes_amount = crashes_amount
         )
 
 @route('/static/<filename:re:.*>')
@@ -66,5 +68,14 @@ def screenshot(filename):
 @route('/screenshot/latest.png')
 def screenshot_latest():
     return screenshot(screenshots_taken[-1])
+
+from tail import tail
+@route('/tail')
+def req_tail():
+    f = open(LOG_FILE)
+    result = tail(f)
+    print result
+    f.close()
+    return result
 
 run(host='localhost', port=3070)

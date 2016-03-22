@@ -2673,7 +2673,6 @@ def static_file(filename, root,
 
     root = os.path.abspath(root) + os.sep
     filename = os.path.abspath(os.path.join(root, filename.strip('/\\')))
-    print filename
     headers = dict()
 
     if not filename.startswith(root):
