@@ -46,9 +46,12 @@ from tail import tail
 @route('/tail')
 def req_tail():
     f = open(_watchDog.LOG_FILE)
-    result = tail(f)
-    f.close()
-    return result
+    if (f):
+        result = tail(f)
+        f.close()
+        return result
+    else:
+        return ""
 
 
 def run_server(watchDog):

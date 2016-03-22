@@ -9,7 +9,7 @@ from threading import Timer
 os.getenv('sdfsadf','sdf')
 class BotWatchDog:
     APP_NAME = os.getenv('WATCH_DOG_APP_NAME', "Diablo III")
-    SCRENSHOTS_DIR = os.getenv('WATCH_DOG_SCRENSHOTS_DIR', "/tmp/")
+    SCRENSHOTS_DIR = os.getenv('WATCH_DOG_SCRENSHOTS_DIR', os.getenv('TEMP', "/tmp/"))
     LOG_FILE = os.getenv('WATCH_DOG_LOG_FILE', "/var/log/system.log")
     MAX_SCREENSHOTS = int(os.getenv('WATCH_DOG_MAX_SCREENSHOTS', "40"))
     SCREENSHOTS_TIMEOUT = int(os.getenv('WATCH_DOG_SCREENSHOTS_TIMEOUT', "2"))
@@ -31,7 +31,7 @@ class BotWatchDog:
     def take_screenshot(self):
         region = App(self.APP_NAME).window()
         if region is None:
-            return
+            region = Screen().getBounds()
         img = capture(region)
         scr = self.screenshot_name()
         shutil.move(img, os.path.join(self.SCRENSHOTS_DIR, scr))
