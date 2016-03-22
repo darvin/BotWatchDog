@@ -60,4 +60,4 @@ def req_tail():
 def run_server(watchDog):
     global _watchDog
     _watchDog = watchDog
-    run(host='localhost', port=3070)
+    run(host='0.0.0.0', port=3070)

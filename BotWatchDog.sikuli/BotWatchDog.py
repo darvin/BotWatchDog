@@ -1,7 +1,19 @@
+APPLICATION_NAME = os.getenv('WATCH_DOG_APP_NAME', "Diablo III")
+import org.sikuli.util.JythonHelper
+JythonHelper.get().addSysPath(getBundlePath())
+from utils import perpetualTimer
+
+def ROS_BOT_INIT():
+    pass
+
+def ROS_BOT_TICK():
+    pass
 
 
 
-
+if APPLICATION_NAME=="Diablo III":
+    ROS_BOT_INIT()
+    perpetualTimer(10, ROS_BOT_TICK)
 
 
 
@@ -12,8 +24,6 @@
 
 #----------------------
 
-import org.sikuli.util.JythonHelper
-JythonHelper.get().addSysPath(getBundlePath())
 
 import shutil
 import os
@@ -25,7 +35,7 @@ from utils import id_generator, perpetualTimer
 
 
 class BotWatchDog:
-    APP_NAME = os.getenv('WATCH_DOG_APP_NAME', "Diablo III")
+    APP_NAME = APPLICATION_NAME
     SCRENSHOTS_DIR = os.getenv('WATCH_DOG_SCRENSHOTS_DIR', os.getenv('TEMP', "/tmp/"))
     LOG_FILE = os.getenv('WATCH_DOG_LOG_FILE', "/var/log/system.log")
     MAX_SCREENSHOTS = int(os.getenv('WATCH_DOG_MAX_SCREENSHOTS', "30"))
@@ -54,8 +64,9 @@ class BotWatchDog:
             os.remove(os.path.join(self.SCRENSHOTS_DIR, screnshot))
 
     def take_screenshot(self):
-        region = App(self.APP_NAME).window()
+        region = App(self.APP_NAME).focusedWindow()
         if region is None:
+            print "App %s not found, taking whole screen screenshot" % self.APP_NAME
             region = Screen().getBounds()
         img = capture(region)
         scr = self.screenshot_name()
