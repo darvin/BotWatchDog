@@ -1,6 +1,6 @@
 APP_NAME = "Photos"
 SCRENSHOTS_DIR = "/tmp/"
-
+MAX_SCREENSHOTS = 4
 import shutil
 import os
 import time 
@@ -8,68 +8,54 @@ from threading import Timer
 
 screenshots_taken = []
 def screenshot_name():
-    return os.path.join(SCRENSHOTS_DIR, "latest-screenshot.png")
+    return "%s.png" % time.strftime("%Y%m%d-%H%M%S")
+
+
+def clean_old_screenshots():
+    global screenshots_taken
+    indx = len(screenshots_taken)-MAX_SCREENSHOTS
+    for screnshot in screenshots_taken[:indx]:
+        print "-scr: %s" % screnshot
+    screenshots_taken = screenshots_taken[indx:]
 
 def take_screenshot():
+    global screenshots_taken
     region = App(APP_NAME).window()
     img = capture(region)
     scr = screenshot_name()
-    shutil.move(img, scr)
+    shutil.move(img, os.path.join(SCRENSHOTS_DIR, scr))
+    print "+scr: %s" % scr
     screenshots_taken.append(scr)
-    print(".")
-    Timer(5, take_screenshot, ()).start()
+    if len(screenshots_taken)>MAX_SCREENSHOTS:
+        clean_old_screenshots()
+    Timer(1, take_screenshot, ()).start()
 
 Timer(1, take_screenshot, ()).start()
 
 
+import org.sikuli.util.JythonHelper
+JythonHelper.get().addSysPath(getBundlePath())
+
+import bottle
+
+from bottle import route, run, template
+from bottle import static_file
+
+@route('/')
+def index():
+    return template('''<b>WatchBot. Screeshots taken: {{screenshot_number}}</b>
+        <br>
+<img src="/screenshot/latest.png">
+        ''', screenshot_number=len(screenshots_taken))
 
 
-import time
-import BaseHTTPServer
-import re
 
-HOST_NAME = 'localhost' # !!!REMEMBER TO CHANGE THIS!!!
-PORT_NUMBER = 3007 # Maybe set this to 9000.
+@route('/screenshot/<filename>')
+def screenshot(filename):
+    return static_file(filename,SCRENSHOTS_DIR, mimetype='image/png')
 
-RE_SCRENSHOT_URL = r'^\/screenshots\/.*\.png$'
+@route('/screenshot/latest.png')
+def screenshot_latest():
+    return screenshot(screenshots_taken[-1])
 
-def process_screenshot_request(s):
-    f = open(screenshots_taken[-1], "rb") 
-    s.send_response(200)
-    s.send_header('Content-type',    'image/png')
-    s.end_headers()
-    s.wfile.write(f.read())
-    f.close()
-
-
-class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-    def do_HEAD(s):
-        s.send_response(200)
-        s.send_header("Content-type", "text/html")
-        s.end_headers()
-    def do_GET(s):
-        """Respond to a GET request."""
-        if (re.match(RE_SCRENSHOT_URL,s.path)):
-            process_screenshot_request(s)
-        else:
-            s.send_response(200)
-            s.send_header("Content-type", "text/html")
-            s.end_headers()
-            s.wfile.write("<html><head><title>Bot Watch</title></head>")
-            s.wfile.write("<body><p>This is a test.</p>")
-            # If someone went to "http://something.somewhere.net/foo/bar/",
-            # then s.path equals "/foo/bar/".
-            s.wfile.write("<p>You accessed path: %s </p>" % (s.path))
-            s.wfile.write('<img scr="%s">' % "/screenshots/latest.png")
-            s.wfile.write("</body></html>")
-
-if __name__ == '__main__':
-    server_class = BaseHTTPServer.HTTPServer
-    httpd = server_class((HOST_NAME, PORT_NUMBER), MyHandler)
-    print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
-    try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    httpd.server_close()
-    print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)
+run(host='localhost', port=3070)
