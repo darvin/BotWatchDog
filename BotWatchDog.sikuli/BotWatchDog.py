@@ -26,13 +26,36 @@ import random
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
+from threading import Timer,Thread,Event
+
+
+class perpetualTimer():
+    def __init__(self,t,hFunction):
+        self.t=t
+        self.hFunction = hFunction
+        self.thread = Timer(self.t,self.handle_function)
+        self.thread.setDaemon(True)
+
+
+    def handle_function(self):
+        self.hFunction()
+        self.thread = Timer(self.t,self.handle_function)
+        self.thread.setDaemon(True)
+        self.thread.start()
+
+    def start(self):
+        self.thread.start()
+
+    def cancel(self):
+        self.thread.cancel()
+
 
 class BotWatchDog:
     APP_NAME = os.getenv('WATCH_DOG_APP_NAME', "Diablo III")
     SCRENSHOTS_DIR = os.getenv('WATCH_DOG_SCRENSHOTS_DIR', os.getenv('TEMP', "/tmp/"))
     LOG_FILE = os.getenv('WATCH_DOG_LOG_FILE', "/var/log/system.log")
     MAX_SCREENSHOTS = int(os.getenv('WATCH_DOG_MAX_SCREENSHOTS', "30"))
-    SCREENSHOTS_TIMEOUT = int(os.getenv('WATCH_DOG_SCREENSHOTS_TIMEOUT', "1"))
+    SCREENSHOTS_TIMEOUT = int(os.getenv('WATCH_DOG_SCREENSHOTS_TIMEOUT', "5"))
     SLEEP_AFTER = int(os.getenv('WATCH_DOG_SLEEP_AFTER', "60"))
 
 
@@ -67,24 +90,22 @@ class BotWatchDog:
         self.screenshots_taken.append(scr)
         if len(self.screenshots_taken)>self.MAX_SCREENSHOTS:
             self.clean_old_screenshots()
-        if time.time() < self.sleep_after_timestamp:
-            self.timer = None
-            self._setTimer()
-        else:
+        if time.time() > self.sleep_after_timestamp:
+            self.timer.cancel()
             self.timer = None
             self.clean_old_screenshots(1)
 
-    def _setTimer(self):
-        if self.timer is None:
-            self.timer = Timer(self.SCREENSHOTS_TIMEOUT, lambda: self.take_screenshot(), ())
-            self.timer.setDaemon(True)
-            self.timer.start()
+    def startTimer(self):
+        self.timer = perpetualTimer(self.SCREENSHOTS_TIMEOUT, lambda: self.take_screenshot())
+        self.timer.start()
 
     def wake(self):
         self.sleep_after_timestamp = time.time() + self.SLEEP_AFTER
-        self.take_screenshot()
+        if self.timer is None:
+            self.startTimer()
 
 dog = BotWatchDog()
+dog.startTimer()
 
 print """Running BotWatchDog: 
     WATCH_DOG_APP_NAME = %s
