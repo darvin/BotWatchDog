@@ -1,6 +1,7 @@
 APP_NAME = "Photos"
 SCRENSHOTS_DIR = "/tmp/"
-MAX_SCREENSHOTS = 4
+LOG_FILE = "/var/log/system.log"
+MAX_SCREENSHOTS = 20
 import shutil
 import os
 import time 
@@ -36,18 +37,26 @@ Timer(1, take_screenshot, ()).start()
 import org.sikuli.util.JythonHelper
 JythonHelper.get().addSysPath(getBundlePath())
 
-import bottle
 
-from bottle import route, run, template
-from bottle import static_file
+print getBundlePath()
+
+
+from bottle import route, run, template, view
+from bottle import static_file, TEMPLATE_PATH
+TEMPLATE_PATH.append(os.path.join(getBundlePath(), "views"))
 
 @route('/')
+@view('index')
 def index():
-    return template('''<b>WatchBot. Screeshots taken: {{screenshot_number}}</b>
-        <br>
-<img src="/screenshot/latest.png">
-        ''', screenshot_number=len(screenshots_taken))
+    return dict(
+        screenshots_number = len(screenshots_taken),
+        screenshots_number_max = MAX_SCREENSHOTS,
+        screenshot_url = "/screenshot/%s"%screenshots_taken[-1]
+        )
 
+@route('/static/<filename:re:.*>')
+def server_static(filename):
+    return static_file(filename, root=os.path.join(getBundlePath(), "static"))
 
 
 @route('/screenshot/<filename>')
